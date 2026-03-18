@@ -77,9 +77,9 @@
             cursor: pointer;
         }
 
-        /* Cấu hình nút Lưu */
+        /* Nút Lưu mặc định màu xám */
         #btn-save { 
-            background: #ccc; /* Mặc định màu xám khi chưa quét */
+            background: #ccc; 
             color: white; 
             border: none; 
             padding: 15px; 
@@ -91,7 +91,7 @@
             cursor: not-allowed;
             transition: 0.3s;
         }
-        /* Lớp CSS khi nút được kích hoạt */
+        /* Khi sẵn sàng lưu thì chuyển màu xanh */
         #btn-save.ready { 
             background: #28a745 !important; 
             cursor: pointer; 
@@ -145,7 +145,7 @@
 
     async function startCamera() {
         const scanBtn = document.getElementById('btn-scan');
-        scanBtn.innerText = "🔄 Đang tải...";
+        scanBtn.innerText = "🔄 Đang khởi động...";
         
         try {
             html5QrCode = new Html5Qrcode("reader");
@@ -159,24 +159,20 @@
                     }
                 },
                 (qrText) => {
+                    // Cập nhật mã QR khi quét trúng
                     if (formData.qr !== qrText) {
                         formData.qr = qrText;
                         const status = document.getElementById('qr-status');
                         const saveBtn = document.getElementById('btn-save');
                         
-                        // 1. Hiển thị text và nhấp nháy
                         status.innerText = "✅ ĐÃ QUÉT: " + qrText;
                         status.style.color = "#2e7d32";
-                        status.classList.add("blink");
+                        status.classList.add("blink"); // Nhấp nháy liên tục
                         
-                        // 2. Kích hoạt nút Lưu (Đổi sang màu xanh)
-                        saveBtn.disabled = false;
-                        saveBtn.classList.add("ready");
+                        saveBtn.disabled = false; // Mở khóa nút lưu
+                        saveBtn.classList.add("ready"); // Đổi màu xanh
                         
                         if (navigator.vibrate) navigator.vibrate(100); 
-
-                        // Tự động lưu sau 0.5s nếu anh muốn hoàn toàn rảnh tay
-                        setTimeout(() => { submitToGoogle(); }, 500);
                     }
                 }
             );
@@ -201,7 +197,7 @@
         if(btn.disabled) return;
         
         btn.innerText = "⏳ ĐANG LƯU...";
-        btn.disabled = true; // Khóa lại để tránh bấm lặp
+        btn.disabled = true;
 
         fetch(SCRIPT_URL, {
             method: "POST",
@@ -211,18 +207,18 @@
         .then(() => {
             alert("🎉 Đã lưu phiếu thành công!");
             
-            // Reset trạng thái để chờ phiếu tiếp theo
+            // Reset dữ liệu QR để chờ lần quét sau
             formData.qr = "";
             status.innerText = "Chờ quét mã QR...";
             status.style.color = "#d32f2f";
             status.classList.remove("blink");
             
             btn.innerText = "LƯU PHIẾU BẦU";
-            btn.classList.remove("ready"); // Nút quay lại màu xám
-            btn.disabled = true;
+            btn.classList.remove("ready");
+            btn.disabled = true; // Khóa nút lại sau khi lưu xong
         })
         .catch(err => {
-            alert("Lỗi: " + err);
+            alert("Lỗi kết nối: " + err);
             btn.disabled = false;
             btn.innerText = "LƯU PHIẾU BẦU";
         });
