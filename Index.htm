@@ -3,82 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quét Phiếu ĐH - GitHub Edition</title>
+    <title>Hệ thống Biểu quyết ĐH</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 15px; margin: 0; }
-        .box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        #reader { width: 100%; max-width: 400px; margin: auto; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #1a73e8; }
-        #display-qr { color: #d32f2f; font-weight: bold; display: block; margin: 15px 0; }
-        .btn-group { display: flex; gap: 10px; }
-        .opt { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #ddd; background: white; font-weight: bold; }
-        .active { background: #2e7d32 !important; color: white !important; }
-        #submit { background: #28a745; color: white; width: 100%; padding: 18px; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
+        .qr-status { display: block; margin: 10px 0; font-weight: bold; color: #d32f2f; }
+        
+        .candidate-item { border-bottom: 1px solid #eee; padding: 12px 0; }
+        .candidate-item:last-child { border-bottom: none; }
+        .name { font-weight: bold; display: block; margin-bottom: 8px; color: #333; }
+        
+        .btn-group { display: flex; gap: 8px; }
+        .opt-btn { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .opt-btn.active-y { background: #2e7d32; color: white; border-color: #2e7d32; }
+        .opt-btn.active-n { background: #c62828; color: white; border-color: #c62828; }
+        
+        #btn-scan { background: #1a73e8; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+        #btn-save { background: #28a745; color: white; border: none; padding: 18px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1.1em; margin-top: 10px; }
+        #btn-save:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <button id="btn-start" style="padding:15px; width:100%;" onclick="startCam()">BẬT CAMERA</button>
-    <div id="reader"></div>
-    <span id="display-qr">Chờ quét mã...</span>
-</div>
-
-<div class="box">
-    <div style="text-align:left; margin-bottom:10px;"><b>1. Trần Thị Hải Vân</b></div>
-    <div class="btn-group">
-        <button id="btn-y" class="opt active" onclick="setChoice('Đồng ý')">Đồng ý</button>
-        <button id="btn-n" class="opt" onclick="setChoice('Không')">Không</button>
+<div class="container">
+    <div class="card">
+        <button id="btn-scan" onclick="startCamera()">MỞ CAMERA QUÉT PHIẾU</button>
+        <div id="reader"></div>
+        <span id="qr-status" class="qr-status">Chưa quét mã phiếu</span>
     </div>
-    <button id="submit" onclick="sendToGoogle()">LƯU PHIẾU BẦU</button>
+
+    <div class="card">
+        <div class="candidate-item">
+            <span class="name">1. Trần Thị Hải Vân</span>
+            <div class="btn-group">
+                <button id="uv1-y" class="opt-btn active-y" onclick="select('uv1','Đồng ý')">Đồng ý</button>
+                <button id="uv1-n" class="opt-btn" onclick="select('uv1','Không')">Không</button>
+            </div>
+        </div>
+
+        <div class="candidate-item">
+            <span class="name">2. Nguyễn Văn Minh</span>
+            <div class="btn-group">
+                <button id="uv2-y" class="opt-btn active-y" onclick="select('uv2','Đồng ý')">Đồng ý</button>
+                <button id="uv2-n" class="opt-btn" onclick="select('uv2','Không')">Không</button>
+            </div>
+        </div>
+
+        <div class="candidate-item">
+            <span class="name">3. Nguyễn Thị Hải Hiền</span>
+            <div class="btn-group">
+                <button id="uv3-y" class="opt-btn active-y" onclick="select('uv3','Đồng ý')">Đồng ý</button>
+                <button id="uv3-n" class="opt-btn" onclick="select('uv3','Không')">Không</button>
+            </div>
+        </div>
+
+        <button id="btn-save" onclick="submitToGoogle()">LƯU PHIẾU BẦU</button>
+    </div>
 </div>
 
 <script>
-    // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLa835py27Y2QRFraUc9msX0Xd_TGIT6lkq-7SFE0b-GZ-9vzLJt-57Jcb6_IhRHtW8Q/exec";
+    // --- CẤU HÌNH ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhb-zc0UHw82Tayt-CpxyU69oUykvlopc8_7jrwcbY5nD9mzpDJIIrFQSndy1BCoMDoQ/exec";
     
-    let vData = { qr: "", uv1: "Đồng ý" };
-    let scanner;
+    let formData = { 
+        qr: "", 
+        uv1: "Đồng ý", 
+        uv2: "Đồng ý", 
+        uv3: "Đồng ý" 
+    };
 
-    async function startCam() {
-        scanner = new Html5Qrcode("reader");
-        await scanner.start(
+    let html5QrCode;
+
+    async function startCamera() {
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(
             { facingMode: "environment" }, 
             { fps: 10, qrbox: 250 },
             (text) => {
-                vData.qr = text;
-                document.getElementById('display-qr').innerText = "✅ ĐÃ NHẬN: " + text;
-                document.getElementById('display-qr').style.color = "green";
+                formData.qr = text;
+                const status = document.getElementById('qr-status');
+                status.innerText = "✅ MÃ PHIẾU: " + text;
+                status.style.color = "#2e7d32";
+                if (navigator.vibrate) navigator.vibrate(50);
             }
         );
-        document.getElementById('btn-start').style.display = 'none';
+        document.getElementById('btn-scan').style.display = 'none';
     }
 
-    function setChoice(val) {
-        vData.uv1 = val;
-        document.getElementById('btn-y').classList.toggle('active', val === 'Đồng ý');
-        document.getElementById('btn-n').classList.toggle('active', val === 'Không');
+    function select(uv, val) {
+        formData[uv] = val;
+        // Cập nhật giao diện nút bấm
+        const isYes = (val === 'Đồng ý');
+        document.getElementById(uv + '-y').className = isYes ? 'opt-btn active-y' : 'opt-btn';
+        document.getElementById(uv + '-n').className = isYes ? 'opt-btn' : 'opt-btn active-n';
     }
 
-    function sendToGoogle() {
-        if(!vData.qr) return alert("Chưa quét mã!");
-        const btn = document.getElementById('submit');
+    function submitToGoogle() {
+        if(!formData.qr) return alert("Bạn chưa quét mã QR trên phiếu!");
+        
+        const btn = document.getElementById('btn-save');
         btn.innerText = "⏳ ĐANG LƯU...";
         btn.disabled = true;
 
         fetch(SCRIPT_URL, {
             method: "POST",
-            body: JSON.stringify(vData)
+            mode: "no-cors", // Quan trọng để tránh lỗi bảo mật trình duyệt
+            body: JSON.stringify(formData)
         })
         .then(() => {
-            alert("Lưu thành công!");
-            vData.qr = "";
-            document.getElementById('display-qr').innerText = "Chờ quét tiếp...";
+            alert("Đã lưu dữ liệu thành công!");
+            // Reset mã QR để quét phiếu tiếp theo
+            formData.qr = "";
+            document.getElementById('qr-status').innerText = "Sẵn sàng quét phiếu mới...";
+            document.getElementById('qr-status').style.color = "#d32f2f";
             btn.innerText = "LƯU PHIẾU BẦU";
             btn.disabled = false;
         })
         .catch(err => {
-            alert("Lỗi kết nối: " + err);
+            alert("Lỗi: " + err);
             btn.disabled = false;
         });
     }
