@@ -22,9 +22,8 @@
             margin-bottom: 10px; 
         }
         
-        /* === THU NHỎ FRAME CAMERA (Ô ĐEN) === */
         #reader { 
-            width: 55%; /* Thu nhỏ lại còn khoảng 1/2 chiều rộng card */
+            width: 55%; 
             max-width: 180px; 
             margin: 5px auto; 
             border-radius: 10px; 
@@ -34,6 +33,7 @@
             aspect-ratio: 1.0;
         }
 
+        /* === HIỆU ỨNG NHẤP NHÁY === */
         .qr-status { 
             display: block; 
             margin: 8px 0; 
@@ -43,7 +43,15 @@
             font-size: 0.95rem;
         }
 
-        /* Tối ưu danh sách ứng viên để tiết kiệm diện tích */
+        .blink {
+            animation: blinker 0.8s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Tối ưu danh sách ứng viên */
         .candidate-item { border-bottom: 1px solid #eee; padding: 10px 0; }
         .candidate-item:last-child { border-bottom: none; }
         .name { font-weight: bold; display: block; margin-bottom: 6px; color: #333; font-size: 0.95rem; }
@@ -125,7 +133,6 @@
         </div>
 
         <button id="btn-save" onclick="submitToGoogle()">LƯU PHIẾU BẦU</button>
-        <p class="footer-note">* Quét mã QR trên phiếu trước khi bấm Lưu.</p>
     </div>
 </div>
 
@@ -145,8 +152,6 @@
                 { facingMode: "environment" }, 
                 { 
                     fps: 20, 
-                    // === KHUNG NHẬN DIỆN TRẮNG TO HƠN ===
-                    // Điều chỉnh tỷ lệ vùng quét chiếm ~85% ô đen
                     qrbox: (viewfinderWidth, viewfinderHeight) => {
                         let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                         let edgeSize = Math.floor(minEdge * 0.85); 
@@ -157,9 +162,20 @@
                     if (formData.qr !== qrText) {
                         formData.qr = qrText;
                         const status = document.getElementById('qr-status');
+                        
+                        // Cập nhật trạng thái và thêm class nhấp nháy
                         status.innerText = "✅ ĐÃ QUÉT: " + qrText;
                         status.style.color = "#2e7d32";
+                        status.classList.add("blink");
+                        
                         if (navigator.vibrate) navigator.vibrate(100); 
+
+                        // === THÔNG BÁO HỎI LƯU NGAY ===
+                        setTimeout(() => {
+                            if (confirm("Đã quét thành công mã: " + qrText + "\nBạn có muốn LƯU PHIẾU này không?")) {
+                                submitToGoogle();
+                            }
+                        }, 500); // Trễ 0.5s để người dùng kịp nhìn thấy dòng chữ nhấp nháy
                     }
                 }
             );
@@ -181,6 +197,7 @@
         if(!formData.qr) return alert("⚠️ Bạn chưa quét mã QR trên phiếu!");
         
         const btn = document.getElementById('btn-save');
+        const status = document.getElementById('qr-status');
         btn.innerText = "⏳ ĐANG LƯU...";
         btn.disabled = true;
 
@@ -190,16 +207,18 @@
             body: JSON.stringify(formData)
         })
         .then(() => {
-            alert("🎉 Thành công!");
+            alert("🎉 Đã lưu kết quả thành công!");
             formData.qr = "";
-            document.getElementById('qr-status').innerText = "Chờ quét mã QR...";
-            document.getElementById('qr-status').style.color = "#d32f2f";
+            status.innerText = "Chờ quét mã QR...";
+            status.style.color = "#d32f2f";
+            status.classList.remove("blink"); // Tắt nhấp nháy sau khi lưu xong
             btn.innerText = "LƯU PHIẾU BẦU";
             btn.disabled = false;
         })
         .catch(err => {
             alert("Lỗi: " + err);
             btn.disabled = false;
+            btn.innerText = "LƯU PHIẾU BẦU";
         });
     }
 </script>
