@@ -43,7 +43,6 @@
             min-height: 1.2em;
         }
 
-        /* Hiệu ứng nhấp nháy liên tục */
         .blink { animation: blinker 0.6s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
 
@@ -77,7 +76,6 @@
             cursor: pointer;
         }
 
-        /* Nút Lưu mặc định màu xám */
         #btn-save { 
             background: #ccc; 
             color: white; 
@@ -91,7 +89,6 @@
             cursor: not-allowed;
             transition: 0.3s;
         }
-        /* Khi sẵn sàng lưu thì chuyển màu xanh */
         #btn-save.ready { 
             background: #28a745 !important; 
             cursor: pointer; 
@@ -159,7 +156,6 @@
                     }
                 },
                 (qrText) => {
-                    // Cập nhật mã QR khi quét trúng
                     if (formData.qr !== qrText) {
                         formData.qr = qrText;
                         const status = document.getElementById('qr-status');
@@ -167,10 +163,10 @@
                         
                         status.innerText = "✅ ĐÃ QUÉT: " + qrText;
                         status.style.color = "#2e7d32";
-                        status.classList.add("blink"); // Nhấp nháy liên tục
+                        status.classList.add("blink");
                         
-                        saveBtn.disabled = false; // Mở khóa nút lưu
-                        saveBtn.classList.add("ready"); // Đổi màu xanh
+                        saveBtn.disabled = false;
+                        saveBtn.classList.add("ready");
                         
                         if (navigator.vibrate) navigator.vibrate(100); 
                     }
@@ -190,6 +186,13 @@
         document.getElementById(uv + '-n').className = isYes ? 'opt-btn' : 'opt-btn active-n';
     }
 
+    // Hàm Reset trạng thái 3 ứng viên về mặc định
+    function resetChoices() {
+        ['uv1', 'uv2', 'uv3'].forEach(uv => {
+            selectChoice(uv, 'Đồng ý');
+        });
+    }
+
     function submitToGoogle() {
         const btn = document.getElementById('btn-save');
         const status = document.getElementById('qr-status');
@@ -207,15 +210,19 @@
         .then(() => {
             alert("🎉 Đã lưu phiếu thành công!");
             
-            // Reset dữ liệu QR để chờ lần quét sau
+            // 1. Reset mã QR
             formData.qr = "";
             status.innerText = "Chờ quét mã QR...";
             status.style.color = "#d32f2f";
             status.classList.remove("blink");
             
+            // 2. Reset nút Lưu
             btn.innerText = "LƯU PHIẾU BẦU";
             btn.classList.remove("ready");
-            btn.disabled = true; // Khóa nút lại sau khi lưu xong
+            btn.disabled = true;
+
+            // 3. Reset 3 ứng viên về "Đồng ý"
+            resetChoices();
         })
         .catch(err => {
             alert("Lỗi kết nối: " + err);
