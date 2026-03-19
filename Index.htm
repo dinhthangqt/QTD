@@ -3,104 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hệ thống Biểu quyết ĐH</title>
+    <title>Hệ thống Biểu quyết Bảo mật</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: #f0f2f5; 
-            margin: 0; 
-            padding: 8px;
-            color: #333;
-        }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 8px; color: #333; }
         .container { max-width: 500px; margin: auto; }
-        .card { 
-            background: white; 
-            padding: 12px; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-            margin-bottom: 10px; 
-        }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 10px; }
         
-        #reader { 
-            width: 55%; 
-            max-width: 180px; 
-            margin: 5px auto; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            background: #000;
-            border: 2px solid #1a73e8;
-            aspect-ratio: 1.0;
-        }
-
-        .qr-status { 
-            display: block; 
-            margin: 8px 0; 
-            font-weight: bold; 
-            color: #d32f2f;
-            text-align: center;
-            font-size: 0.95rem;
-            min-height: 1.2em;
-        }
-
+        /* Login Overlay */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f2f5; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        /* QR Scanner */
+        #reader { width: 100%; max-width: 250px; margin: 10px auto; border-radius: 10px; overflow: hidden; background: #000; border: 2px solid #1a73e8; aspect-ratio: 1; }
+        .qr-status { display: block; margin: 10px 0; font-weight: bold; color: #d32f2f; text-align: center; }
         .blink { animation: blinker 0.6s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
 
-        .candidate-item { border-bottom: 1px solid #eee; padding: 10px 0; }
-        .candidate-item:last-child { border-bottom: none; }
-        .name { font-weight: bold; display: block; margin-bottom: 6px; color: #333; font-size: 0.95rem; }
-        
-        .btn-group { display: flex; gap: 6px; }
-        .opt-btn { 
-            flex: 1; 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            background: #fff; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 0.9rem;
-        }
-        .opt-btn.active-y { background: #2e7d32 !important; color: white !important; border-color: #2e7d32; }
-        .opt-btn.active-n { background: #c62828 !important; color: white !important; border-color: #c62828; }
-        
-        #btn-scan { 
-            background: #1a73e8; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            width: 100%; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            margin-bottom: 5px; 
-            cursor: pointer;
-        }
+        /* Candidate UI */
+        .candidate-item { border-bottom: 1px solid #eee; padding: 12px 0; }
+        .name { font-weight: bold; display: block; margin-bottom: 8px; }
+        .btn-group { display: flex; gap: 8px; }
+        .opt-btn { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-weight: bold; cursor: pointer; }
+        .active-y { background: #2e7d32 !important; color: white !important; border-color: #2e7d32; }
+        .active-n { background: #c62828 !important; color: white !important; border-color: #c62828; }
 
-        #btn-save { 
-            background: #ccc; 
-            color: white; 
-            border: none; 
-            padding: 15px; 
-            width: 100%; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-size: 1.1rem; 
-            margin-top: 10px; 
-            cursor: not-allowed;
-            transition: 0.3s;
-        }
-        #btn-save.ready { 
-            background: #28a745 !important; 
-            cursor: pointer; 
-            box-shadow: 0 4px 6px rgba(40,167,69,0.3);
-        }
+        .btn-main { background: #1a73e8; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-save { background: #ccc; cursor: not-allowed; margin-top: 10px; }
+        .btn-save.ready { background: #28a745 !important; cursor: pointer; }
     </style>
 </head>
 <body>
 
+<div id="login-overlay">
+    <div class="card" style="width: 100%; max-width: 350px; text-align: center;">
+        <h2 style="color: #1a73e8;">ĐĂNG NHẬP</h2>
+        <input type="email" id="login-email" placeholder="Email của bạn">
+        <input type="password" id="login-pass" placeholder="Mật khẩu">
+        <button class="btn-main" onclick="checkLogin()" id="btn-login-submit">XÁC NHẬN</button>
+        <p id="login-error" style="color: red; display: none; margin-top: 10px;">Sai thông tin đăng nhập!</p>
+    </div>
+</div>
+
 <div class="container">
     <div class="card" style="text-align: center;">
-        <button id="btn-scan" onclick="startCamera()">BẬT CAMERA QUÉT MÃ</button>
+        <p id="user-display" style="font-weight: bold; color: #555;"></p>
+        <button id="btn-scan" class="btn-main" onclick="startCamera()">BẬT CAMERA QUÉT MÃ</button>
         <div id="reader"></div>
         <span id="qr-status" class="qr-status">Chờ quét mã QR...</span>
     </div>
@@ -130,45 +78,70 @@
             </div>
         </div>
 
-        <button id="btn-save" disabled onclick="submitToGoogle()">LƯU PHIẾU BẦU</button>
+        <button id="btn-save" class="btn-main btn-save" disabled onclick="submitToGoogle()">LƯU PHIẾU BẦU</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhb-zc0UHw82Tayt-CpxyU69oUykvlopc8_7jrwcbY5nD9mzpDJIIrFQSndy1BCoMDoQ/exec";
+    // THAY URL WEB APP CỦA BẠN VÀO ĐÂY
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4_yHxwnPq5LidBg85HoioKJ0fZJZ-fS79Eoq7smywXhglm_uFCmmnlR79tBKuFkstUA/exec";
     
-    let formData = { qr: "", uv1: "Đồng ý", uv2: "Đồng ý", uv3: "Đồng ý" };
+    let currentUserEmail = "";
+    let formData = { email: "", qr: "", uv1: "Đồng ý", uv2: "Đồng ý", uv3: "Đồng ý" };
     let html5QrCode;
 
+    // --- XỬ LÝ ĐĂNG NHẬP (GỌI GOOGLE SCRIPT) ---
+    async function checkLogin() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        const btn = document.getElementById('btn-login-submit');
+        const errorMsg = document.getElementById('login-error');
+
+        if (!email || !pass) { alert("Vui lòng nhập đầy đủ!"); return; }
+
+        btn.innerText = "⏳ ĐANG KIỂM TRA...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=login&email=${email}&pass=${pass}`);
+            const result = await response.json();
+
+            if (result.status === "success") {
+                currentUserEmail = email;
+                document.getElementById('user-display').innerText = "Cử tri: " + email;
+                document.getElementById('login-overlay').style.display = 'none';
+            } else {
+                errorMsg.style.display = 'block';
+                btn.innerText = "XÁC NHẬN";
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert("Lỗi kết nối máy chủ Google!");
+            btn.disabled = false;
+            btn.innerText = "XÁC NHẬN";
+        }
+    }
+
+    // --- XỬ LÝ CAMERA ---
     async function startCamera() {
         const scanBtn = document.getElementById('btn-scan');
         scanBtn.innerText = "🔄 Đang khởi động...";
-        
         try {
             html5QrCode = new Html5Qrcode("reader");
             await html5QrCode.start(
                 { facingMode: "environment" }, 
-                { 
-                    fps: 20, 
-                    qrbox: (viewfinderWidth, viewfinderHeight) => {
-                        let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                        return { width: Math.floor(minEdge * 0.85), height: Math.floor(minEdge * 0.85) };
-                    }
-                },
+                { fps: 20, qrbox: 200 },
                 (qrText) => {
                     if (formData.qr !== qrText) {
                         formData.qr = qrText;
                         const status = document.getElementById('qr-status');
                         const saveBtn = document.getElementById('btn-save');
-                        
                         status.innerText = "✅ ĐÃ QUÉT: " + qrText;
                         status.style.color = "#2e7d32";
                         status.classList.add("blink");
-                        
                         saveBtn.disabled = false;
                         saveBtn.classList.add("ready");
-                        
-                        if (navigator.vibrate) navigator.vibrate(100); 
+                        if (navigator.vibrate) navigator.vibrate(100);
                     }
                 }
             );
@@ -186,46 +159,39 @@
         document.getElementById(uv + '-n').className = isYes ? 'opt-btn' : 'opt-btn active-n';
     }
 
-    // Hàm Reset trạng thái 3 ứng viên về mặc định
     function resetChoices() {
-        ['uv1', 'uv2', 'uv3'].forEach(uv => {
-            selectChoice(uv, 'Đồng ý');
-        });
+        ['uv1', 'uv2', 'uv3'].forEach(uv => selectChoice(uv, 'Đồng ý'));
     }
 
+    // --- LƯU DỮ LIỆU ---
     function submitToGoogle() {
         const btn = document.getElementById('btn-save');
         const status = document.getElementById('qr-status');
         
         if(btn.disabled) return;
         
+        formData.email = currentUserEmail;
         btn.innerText = "⏳ ĐANG LƯU...";
         btn.disabled = true;
 
         fetch(SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify(formData)
+            body: JSON.stringify(formData),
+            headers: { "Content-Type": "text/plain;charset=utf-8" }
         })
         .then(() => {
             alert("🎉 Đã lưu phiếu thành công!");
-            
-            // 1. Reset mã QR
             formData.qr = "";
             status.innerText = "Chờ quét mã QR...";
             status.style.color = "#d32f2f";
             status.classList.remove("blink");
-            
-            // 2. Reset nút Lưu
             btn.innerText = "LƯU PHIẾU BẦU";
             btn.classList.remove("ready");
             btn.disabled = true;
-
-            // 3. Reset 3 ứng viên về "Đồng ý"
             resetChoices();
         })
         .catch(err => {
-            alert("Lỗi kết nối: " + err);
+            alert("Lỗi lưu phiếu: " + err);
             btn.disabled = false;
             btn.innerText = "LƯU PHIẾU BẦU";
         });
