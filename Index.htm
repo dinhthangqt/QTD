@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hệ thống Biểu quyết Bảo mật</title>
+    <title>Hệ thống Kiểm Biểu quyết</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 8px; color: #333; }
@@ -108,7 +108,7 @@
 
             if (result.status === "success") {
                 currentUserEmail = email;
-                document.getElementById('user-display').innerText = "Cử tri: " + email;
+                document.getElementById('user-display').innerText = "Người dùng: " + email;
                 document.getElementById('login-overlay').style.display = 'none';
             } else {
                 errorMsg.style.display = 'block';
