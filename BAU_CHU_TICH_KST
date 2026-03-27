@@ -57,55 +57,21 @@
     </div>
 
     <div class="card">
-        <div class="block-title">I. BẦU THÀNH VIÊN HĐQT</div>
-        
+        <div class="block-title">I. BẦU CHỦ TỊCH HĐQT</div>
         <div class="candidate-item">
-            <span class="name">1. Nguyễn Thị Hải Hiền</span>
+            <span class="name">1. Trần Thị Hải Vân</span>
             <div class="btn-group">
-                <button id="uv1-y" class="opt-btn active-y" onclick="selectChoice('uv1','Đồng ý')">Đồng ý</button>
-                <button id="uv1-n" class="opt-btn" onclick="selectChoice('uv1','Không đồng ý')">Không đồng ý</button>
+                <button id="ct-y" class="opt-btn active-y" onclick="selectChoice('ct','Đồng ý')">Đồng ý</button>
+                <button id="ct-n" class="opt-btn" onclick="selectChoice('ct','Không đồng ý')">Không đồng ý</button>
             </div>
         </div>
 
+        <div class="block-title">II. BẦU TRƯỞNG BAN KIỂM SOÁT</div>
         <div class="candidate-item">
-            <span class="name">2. Nguyễn Văn Minh</span>
+            <span class="name">1. Trần Biên Thùy</span>
             <div class="btn-group">
-                <button id="uv2-y" class="opt-btn active-y" onclick="selectChoice('uv2','Đồng ý')">Đồng ý</button>
-                <button id="uv2-n" class="opt-btn" onclick="selectChoice('uv2','Không đồng ý')">Không đồng ý</button>
-            </div>
-        </div>
-
-        <div class="candidate-item">
-            <span class="name">3. Trần Thị Hải Vân</span>
-            <div class="btn-group">
-                <button id="uv3-y" class="opt-btn active-y" onclick="selectChoice('uv3','Đồng ý')">Đồng ý</button>
-                <button id="uv3-n" class="opt-btn" onclick="selectChoice('uv3','Không đồng ý')">Không đồng ý</button>
-            </div>
-        </div>
-
-        <div class="block-title">II. BẦU THÀNH VIÊN BKS</div>
-
-        <div class="candidate-item">
-            <span class="name">1. Trần Thị Thu Hà</span>
-            <div class="btn-group">
-                <button id="bks1-y" class="opt-btn active-y" onclick="selectChoice('bks1','Đồng ý')">Đồng ý</button>
-                <button id="bks1-n" class="opt-btn" onclick="selectChoice('bks1','Không đồng ý')">Không đồng ý</button>
-            </div>
-        </div>
-
-        <div class="candidate-item">
-            <span class="name">2. Trần Biên Thùy</span>
-            <div class="btn-group">
-                <button id="bks2-y" class="opt-btn active-y" onclick="selectChoice('bks2','Đồng ý')">Đồng ý</button>
-                <button id="bks2-n" class="opt-btn" onclick="selectChoice('bks2','Không đồng ý')">Không đồng ý</button>
-            </div>
-        </div>
-
-        <div class="candidate-item">
-            <span class="name">3. Trần Thu Trang</span>
-            <div class="btn-group">
-                <button id="bks3-y" class="opt-btn active-y" onclick="selectChoice('bks3','Đồng ý')">Đồng ý</button>
-                <button id="bks3-n" class="opt-btn" onclick="selectChoice('bks3','Không đồng ý')">Không đồng ý</button>
+                <button id="tbks-y" class="opt-btn active-y" onclick="selectChoice('tbks','Đồng ý')">Đồng ý</button>
+                <button id="tbks-n" class="opt-btn" onclick="selectChoice('tbks','Không đồng ý')">Không đồng ý</button>
             </div>
         </div>
     </div>
@@ -117,8 +83,8 @@
     let currentUserEmail = "";
     let formData = { 
         email: "", qr: "", 
-        uv1: "Đồng ý", uv2: "Đồng ý", uv3: "Đồng ý",
-        bks1: "Đồng ý", bks2: "Đồng ý", bks3: "Đồng ý" 
+        ct: "Đồng ý", 
+        tbks: "Đồng ý"
     };
     let html5QrCode;
 
@@ -186,7 +152,9 @@
     }
 
     function resetChoices() {
-        ['uv1', 'uv2', 'uv3', 'bks1', 'bks2', 'bks3'].forEach(id => selectChoice(id, 'Đồng ý'));
+        // Reset về mặc định cho 2 vị trí mới
+        selectChoice('ct', 'Đồng ý');
+        selectChoice('tbks', 'Đồng ý');
     }
 
     function submitToGoogle() {
