@@ -3,60 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quỹ TDND Hồ Xá - Hệ thống nhập liệu từ xa</title>
+    <title>Báo Cáo Tín Dụngc</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Thay đổi nền chính sang xanh xám nhạt để tránh chói */
+        /* Nền chính xanh xám nhạt dịu mắt */
         body { 
             background: #eef2f7; 
             padding-bottom: 90px; 
             font-size: 13px; 
             color: #33475b;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* Các khối nội dung xanh cực nhẹ */
+        /* Cấu trúc khối nội dung */
         .category-block { 
             background: #fdfeff; 
-            padding: 15px; 
             border-radius: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 25px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             border: 1px solid #dce4ec;
+            overflow: hidden; /* Để bo góc nền tiêu đề mục */
         }
         
+        /* --- PHẦN CẢI TIẾN: LÀM NỔI BẬT TIÊU ĐỀ MỤC --- */
+        .section-header {
+            background-color: #d1e3f8; /* Nền xanh dương đậm hơn cho tiêu đề mục */
+            padding: 12px 15px;
+            border-bottom: 2px solid #3498db; /* Viền dưới đậm */
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title { 
+            margin: 0;
+            color: #1a4d7c; /* Màu chữ xanh đen đậm tương phản tốt */
+            font-weight: bold; 
+            text-transform: uppercase; 
+            font-size: 15px; /* Chữ to hơn một chút */
+            letter-spacing: 0.5px;
+        }
+        /* ----------------------------------------------- */
+
         /* Tùy chỉnh ô nhập liệu */
         .table input, .table select { 
             border: none; 
             width: 100%; 
             outline: none; 
-            padding: 4px; 
+            padding: 6px 4px; /* Tăng padding để dễ gõ */
             border-bottom: 1px solid transparent; 
             background: transparent; 
+            transition: all 0.2s;
         }
         
-        /* Hiệu ứng khi nhấn vào ô nhập liệu - Xanh dương rõ hơn */
+        /* Hiệu ứng khi nhấn vào ô nhập liệu */
         .table input:focus, .table select:focus { 
             border-bottom: 2px solid #3498db; 
             background: #f0f8ff; 
         }
 
-        .section-title { 
-            border-left: 5px solid #3498db; 
-            padding-left: 10px; 
-            margin-bottom: 15px; 
-            color: #2c3e50; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-        }
-
         /* Tiêu đề bảng màu xanh dịu */
         .table-light {
             background-color: #e3effb !important;
+            border-color: #dce4ec;
+        }
+        .table-responsive {
+            padding: 10px 15px;
         }
 
-        .btn-delete { color: #e74c3c; cursor: pointer; font-size: 18px; }
+        .btn-delete { color: #e74c3c; cursor: pointer; font-size: 18px; transition: 0.2s; }
+        .btn-delete:hover { transform: scale(1.1); color: #c0392b; }
         
+        /* Thanh nút Lưu cố định dưới màn hình */
         .sticky-bottom-bar { 
             position: fixed; 
             bottom: 0; 
@@ -64,8 +82,8 @@
             right: 0; 
             background: rgba(238, 242, 247, 0.95); 
             backdrop-filter: blur(5px);
-            padding: 12px; 
-            box-shadow: 0 -3px 10px rgba(0,0,0,0.1); 
+            padding: 15px; 
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.1); 
             text-align: center; 
             z-index: 1000; 
         }
@@ -75,17 +93,22 @@
             text-align: center; 
             background: #e9ecef; 
             font-weight: bold; 
+            color: #555;
         }
 
-        h3.text-primary { color: #2980b9 !important; }
-        .btn-primary { background-color: #3498db; border: none; }
+        /* Màu sắc chung */
+        h3.text-primary { color: #2980b9 !important; text-transform: uppercase; letter-spacing: 1px;}
+        .btn-primary { background-color: #3498db; border: none; font-weight: bold;}
         .btn-primary:hover { background-color: #2980b9; }
+        .btn-link { color: #3498db; font-weight: 500;}
+        .btn-link:hover { color: #2980b9; }
+
     </style>
 </head>
 <body>
 
-<div class="container-fluid mt-3">
-    <h3 class="text-center mb-4 fw-bold text-primary">HỆ THỐNG BÁO CÁO TÍN DỤNG</h3>
+<div class="container-fluid mt-4">
+    <h3 class="text-center mb-5 fw-bold text-primary">HỆ THỐNG BÁO CÁO TÍN DỤNG</h3>
     <div id="all-tables"></div>
 </div>
 
@@ -96,8 +119,10 @@
 </div>
 
 <script>
+    // THAY URL WEB APP CỦA BẠN VÀO ĐÂY
     const WEB_APP_URL = "DÁN_URL_WEB_APP_CỦA_BẠN_VÀO_ĐÂY";
     
+    // Cấu hình các bảng
     const config = [
         { id: "TuVan", title: "I. TIẾP XÚC TƯ VẤN KHÁCH HÀNG", type: "tuvan" },
         { id: "ThamDinh", title: "II. THẨM ĐỊNH HỒ SƠ TÍN DỤNG", type: "thamdinh" },
@@ -109,53 +134,60 @@
     function init() {
         const container = document.getElementById('all-tables');
         config.forEach(item => {
-            let headers = `<th class="stt-col">STT</th><th style="min-width:160px">Tên khách hàng</th><th style="min-width:110px">Địa chỉ</th>`;
+            let headers = `<th class="stt-col">STT</th><th style="min-width:180px">Tên khách hàng</th><th style="min-width:120px">Địa chỉ</th>`;
             
             if (item.type === "tuvan") {
-                headers += `<th>Số tiền ĐK</th><th>Mục đích</th><th>Thời hạn</th><th style="min-width:130px">Ngày thẩm định KQ</th>`;
+                headers += `<th style="min-width:120px">Số tiền ĐK</th><th style="min-width:120px">Mục đích</th><th style="min-width:80px">Thời hạn</th><th style="min-width:130px">Ngày thẩm định KQ</th>`;
             } else if (item.type === "thamdinh") {
-                headers += `<th>Số tiền ĐK</th><th>Mục đích</th><th>Thời hạn</th><th style="min-width:130px">Kết quả</th>`;
+                headers += `<th style="min-width:120px">Số tiền ĐK</th><th style="min-width:120px">Mục đích</th><th style="min-width:80px">Thời hạn</th><th style="min-width:130px">Kết quả</th>`;
             } else if (item.type === "disbursement") {
-                headers += `<th style="min-width:130px">${item.label}</th><th style="min-width:130px">Mục đích</th>`;
+                headers += `<th style="min-width:150px">${item.label}</th><th style="min-width:150px">Mục đích</th>`;
             } else {
-                headers += `<th style="min-width:150px">${item.label}</th>`;
+                headers += `<th style="min-width:180px">${item.label}</th>`;
             }
             
-            headers += `<th>Ghi chú</th><th style="width:40px">Xóa</th>`;
+            headers += `<th style="min-width:180px">Ghi chú</th><th style="width:40px">Xóa</th>`;
 
             const html = `
                 <div class="category-block">
-                    <h6 class="section-title small">${item.title}</h6>
+                    <div class="section-header">
+                        <h6 class="section-title small">${item.title}</h6>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered" data-category="${item.id}">
+                        <table class="table table-sm table-bordered table-hover align-middle" data-category="${item.id}">
                             <thead class="table-light small text-center align-middle">
                                 <tr>${headers}</tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
-                    <button class="btn btn-sm btn-link text-primary text-decoration-none mt-2" onclick="addRow('${item.id}')">+ Thêm dòng mới</button>
+                    <div class="px-3 pb-3">
+                        <button class="btn btn-sm btn-link text-decoration-none" onclick="addRow('${item.id}')">
+                            <i class="fas fa-plus-circle me-1"></i>Thêm dòng mới
+                        </button>
+                    </div>
                 </div>
             `;
             container.innerHTML += html;
-            addRow(item.id); 
+            addRow(item.id); // Mặc định mỗi bảng 1 dòng
         });
     }
 
+    // --- Giữ nguyên các hàm bổ trợ ---
     function addRow(catId) {
         const conf = config.find(c => c.id === catId);
         const tbody = document.querySelector(`table[data-category="${catId}"] tbody`);
         const tr = document.createElement('tr');
         
-        let inputs = `<td class="stt-col small"></td><td><input type="text" class="ten"></td><td><input type="text" class="dc"></td>`;
+        let inputs = `<td class="stt-col small align-middle"></td><td><input type="text" class="ten" placeholder="Họ tên..."></td><td><input type="text" class="dc" placeholder="Địa chỉ..."></td>`;
 
         if (conf.type === "tuvan") {
-            inputs += `<td><input type="text" class="soTienDK"></td><td><input type="text" class="mucDich"></td><td><input type="text" class="thoiHan"></td><td><input type="date" class="ngayThamDinh"></td>`;
+            inputs += `<td><input type="text" class="soTienDK" placeholder="VNĐ"></td><td><input type="text" class="mucDich"></td><td><input type="text" class="thoiHan" placeholder="Tháng"></td><td><input type="date" class="ngayThamDinh"></td>`;
         } else if (conf.type === "thamdinh") {
             inputs += `
-                <td><input type="text" class="soTienDK"></td>
+                <td><input type="text" class="soTienDK" placeholder="VNĐ"></td>
                 <td><input type="text" class="mucDich"></td>
-                <td><input type="text" class="thoiHan"></td>
+                <td><input type="text" class="thoiHan" placeholder="Tháng"></td>
                 <td>
                     <select class="ketQua">
                         <option value="Đồng ý">Đồng ý</option>
@@ -163,12 +195,12 @@
                     </select>
                 </td>`;
         } else if (conf.type === "disbursement") {
-            inputs += `<td><input type="text" class="val"></td><td><input type="text" class="mucDich"></td>`;
+            inputs += `<td><input type="text" class="val" placeholder="VNĐ"></td><td><input type="text" class="mucDich"></td>`;
         } else {
             inputs += `<td><input type="text" class="val"></td>`;
         }
 
-        inputs += `<td><input type="text" class="note"></td><td class="text-center"><span class="btn-delete" onclick="removeRow(this, '${catId}')">×</span></td>`;
+        inputs += `<td><input type="text" class="note" placeholder="..."></td><td class="text-center align-middle"><span class="btn-delete" onclick="removeRow(this, '${catId}')">×</span></td>`;
         
         tr.innerHTML = inputs;
         tbody.appendChild(tr);
@@ -176,8 +208,10 @@
     }
 
     function removeRow(btn, catId) {
-        btn.closest('tr').remove();
-        updateSTT(catId);
+        if(confirm("Xóa dòng này?")) {
+            btn.closest('tr').remove();
+            updateSTT(catId);
+        }
     }
 
     function updateSTT(catId) {
@@ -223,9 +257,12 @@
             if (catData.length > 0) { finalData[item.id] = catData; hasData = true; }
         });
 
-        if (!hasData) return alert("Vui lòng nhập dữ liệu!");
+        if (!hasData) return alert("Vui lòng nhập tên khách hàng!");
+        
+        if(!confirm("Lưu báo cáo lên Google Sheet?")) return;
+
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang gửi...';
 
         try {
             await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(finalData) });
@@ -238,7 +275,8 @@
         }
     }
 
-    init();
+    // Khởi tạo bảng khi load trang
+    window.onload = init;
 </script>
 </body>
 </html>
