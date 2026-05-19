@@ -2,281 +2,828 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Tín Dụngc</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Thẩm định vay vốn - Bản đồ tìm kiếm & Quản lý ảnh</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        /* Nền chính xanh xám nhạt dịu mắt */
-        body { 
-            background: #eef2f7; 
-            padding-bottom: 90px; 
-            font-size: 13px; 
-            color: #33475b;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * {
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-bg: #e3f2fd;
+            --header-color: #1565c0;
+            --section-bg: #ffffff;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            color: var(--header-color);
+            margin-bottom: 20px;
+        }
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .col {
+            background: var(--section-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .col h3 {
+            border-left: 4px solid var(--header-color);
+            padding-left: 10px;
+            color: var(--header-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .full-width-section {
+            background: var(--section-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .full-width-section h3 {
+            border-left: 4px solid var(--header-color);
+            padding-left: 10px;
+            color: var(--header-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .map-container {
+            height: 250px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+            z-index: 1;
+        }
+        .map-search-box {
+            display: flex;
+            gap: 8px;
+            margin: 8px 0 6px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .map-search-box input {
+            flex: 2;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #bbb;
+            border-radius: 30px;
+        }
+        .map-search-box button {
+            background-color: var(--header-color);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .map-search-box button:hover {
+            background-color: #0d47a1;
+        }
+        .coords-display {
+            font-size: 12px;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 20px;
+            margin-top: 6px;
+            color: #0c4a6e;
+            font-family: monospace;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+        }
+        .btn-submit {
+            background-color: var(--header-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-submit:disabled {
+            background-color: #90a4ae;
+            cursor: not-allowed;
         }
         
-        /* Cấu trúc khối nội dung */
-        .category-block { 
-            background: #fdfeff; 
-            border-radius: 12px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border: 1px solid #dce4ec;
-            overflow: hidden; /* Để bo góc nền tiêu đề mục */
+        /* QUẢN LÝ ẢNH ĐỘNG */
+        .preview-img {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
         }
-        
-        /* --- PHẦN CẢI TIẾN: LÀM NỔI BẬT TIÊU ĐỀ MỤC --- */
-        .section-header {
-            background-color: #d1e3f8; /* Nền xanh dương đậm hơn cho tiêu đề mục */
-            padding: 12px 15px;
-            border-bottom: 2px solid #3498db; /* Viền dưới đậm */
+        .image-wrapper {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f1f5f9;
+        }
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .btn-delete-img {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .btn-delete-img:hover {
+            background: #dc2626;
         }
 
-        .section-title { 
-            margin: 0;
-            color: #1a4d7c; /* Màu chữ xanh đen đậm tương phản tốt */
-            font-weight: bold; 
-            text-transform: uppercase; 
-            font-size: 15px; /* Chữ to hơn một chút */
-            letter-spacing: 0.5px;
+        .loading {
+            text-align: center;
+            color: #0d47a1;
+            margin-top: 10px;
+            font-weight: bold;
         }
-        /* ----------------------------------------------- */
-
-        /* Tùy chỉnh ô nhập liệu */
-        .table input, .table select { 
-            border: none; 
-            width: 100%; 
-            outline: none; 
-            padding: 6px 4px; /* Tăng padding để dễ gõ */
-            border-bottom: 1px solid transparent; 
-            background: transparent; 
-            transition: all 0.2s;
+        .error {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 5px;
         }
-        
-        /* Hiệu ứng khi nhấn vào ô nhập liệu */
-        .table input:focus, .table select:focus { 
-            border-bottom: 2px solid #3498db; 
-            background: #f0f8ff; 
+        .qr-scanner button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 5px;
         }
-
-        /* Tiêu đề bảng màu xanh dịu */
-        .table-light {
-            background-color: #e3effb !important;
-            border-color: #dce4ec;
+        .qr-scanner button:hover {
+            background-color: #388e3c;
         }
-        .table-responsive {
-            padding: 10px 15px;
+        .reader {
+            width: 100%;
+            max-width: 280px;
+            margin: 10px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid #1a73e8;
+            aspect-ratio: 1;
+            display: none;
         }
-
-        .btn-delete { color: #e74c3c; cursor: pointer; font-size: 18px; transition: 0.2s; }
-        .btn-delete:hover { transform: scale(1.1); color: #c0392b; }
-        
-        /* Thanh nút Lưu cố định dưới màn hình */
-        .sticky-bottom-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: rgba(238, 242, 247, 0.95); 
-            backdrop-filter: blur(5px);
-            padding: 15px; 
-            box-shadow: 0 -3px 15px rgba(0,0,0,0.1); 
-            text-align: center; 
-            z-index: 1000; 
+        .qr-status {
+            display: block;
+            margin: 8px 0;
+            font-weight: bold;
+            text-align: center;
+            font-size: 12px;
         }
-
-        .stt-col { 
-            width: 35px; 
-            text-align: center; 
-            background: #e9ecef; 
-            font-weight: bold; 
-            color: #555;
+        .qr-content-textarea {
+            width: 100%;
+            height: 120px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid #cbd5e1;
+            resize: vertical;
         }
-
-        /* Màu sắc chung */
-        h3.text-primary { color: #2980b9 !important; text-transform: uppercase; letter-spacing: 1px;}
-        .btn-primary { background-color: #3498db; border: none; font-weight: bold;}
-        .btn-primary:hover { background-color: #2980b9; }
-        .btn-link { color: #3498db; font-weight: 500;}
-        .btn-link:hover { color: #2980b9; }
-
+        .btn-copy {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 11px;
+        }
+        .money-input {
+            text-align: right;
+            font-weight: 500;
+        }
+        hr {
+            margin: 15px 0;
+            border: 0;
+            border-top: 1px solid #ccc;
+        }
+        @media (max-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .map-search-box input {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container-fluid mt-4">
-    <h3 class="text-center mb-5 fw-bold text-primary">HỆ THỐNG BÁO CÁO TÍN DỤNG</h3>
-    <div id="all-tables"></div>
-</div>
+<h2>🏦 PHIẾU THẨM ĐỊNH VAY VỐN <span style="font-size:0.9rem;">(Bản đồ + Tìm kiếm địa danh)</span></h2>
 
-<div class="sticky-bottom-bar">
-    <button class="btn btn-primary btn-lg px-5 shadow" id="btnSubmit" onclick="saveAll()">
-        <i class="fas fa-save me-2"></i> LƯU TOÀN BỘ BÁO CÁO
-    </button>
-</div>
+<form id="appraisalForm">
+    <div class="two-columns">
+        <!-- Cột trái: Người vay 1 -->
+        <div class="col">
+            <h3>👨 NGƯỜI VAY 1 (Chồng / Vợ)</h3>
+            <div class="form-group">
+                <label>CCCD mặt trước:</label>
+                <input type="file" accept="image/*" class="cccd_front_1">
+                <div class="preview_cccd_front_1 preview-img"></div>
+            </div>
+            <div class="form-group">
+                <label>CCCD mặt sau:</label>
+                <input type="file" accept="image/*" class="cccd_back_1">
+                <div class="preview_cccd_back_1 preview-img"></div>
+            </div>
+            <div class="qr-scanner">
+                <button type="button" class="scanQRBtn1">📷 Quét QR</button>
+                <button type="button" class="stopScanBtn1" style="background:#f44336;">✖ Dừng</button>
+                <div class="reader reader1"></div>
+                <span class="qr-status1 qr-status">Chưa quét/dán</span>
+            </div>
+            <div class="form-group">
+                <label>Nội dung thông tin CCCD (Quét hoặc Dán):</label>
+                <textarea class="qr_display1 qr-content-textarea" placeholder="Dán văn bản CCCD vào đây..."></textarea>
+                <input type="hidden" name="qr_raw_1" class="qr_raw_1">
+                <button type="button" class="copyQrBtn1 btn-copy" style="display:none;">📋 Sao chép</button>
+            </div>
+            <div class="form-group">
+                <label>Số CCCD (tự động):</label>
+                <input type="text" name="cccd_number_1" class="cccd_number_1" placeholder="Số căn cước">
+            </div>
+            <div class="form-group">
+                <label>Họ tên (tự động):</label>
+                <input type="text" name="customer_name_1" class="customer_name_1" required>
+            </div>
+        </div>
 
-<script>
-    // THAY URL WEB APP CỦA BẠN VÀO ĐÂY
-    const WEB_APP_URL = "DÁN_URL_WEB_APP_CỦA_BẠN_VÀO_ĐÂY";
-    
-    // Cấu hình các bảng
-    const config = [
-        { id: "TuVan", title: "I. TIẾP XÚC TƯ VẤN KHÁCH HÀNG", type: "tuvan" },
-        { id: "ThamDinh", title: "II. THẨM ĐỊNH HỒ SƠ TÍN DỤNG", type: "thamdinh" },
-        { id: "GiaiNgan", title: "III. GIẢI NGÂN", label: "Số tiền giải ngân", type: "disbursement" },
-        { id: "ThuNo", title: "IV. THU NỢ (GỐC, LÃI)", label: "Số tiền thu", type: "standard" },
-        { id: "KiemTra", title: "V. KIỂM TRA SỬ DỤNG VỐN, TSĐB", label: "Số HĐTD", type: "standard" }
-    ];
+        <!-- Cột phải: Người vay 2 -->
+        <div class="col">
+            <h3>👩 NGƯỜI VAY 2 (Vợ / Chồng)</h3>
+            <div class="form-group">
+                <label>CCCD mặt trước:</label>
+                <input type="file" accept="image/*" class="cccd_front_2">
+                <div class="preview_cccd_front_2 preview-img"></div>
+            </div>
+            <div class="form-group">
+                <label>CCCD mặt sau:</label>
+                <input type="file" accept="image/*" class="cccd_back_2">
+                <div class="preview_cccd_back_2 preview-img"></div>
+            </div>
+            <div class="qr-scanner">
+                <button type="button" class="scanQRBtn2">📷 Quét QR</button>
+                <button type="button" class="stopScanBtn2" style="background:#f44336;">✖ Dừng</button>
+                <div class="reader reader2"></div>
+                <span class="qr-status2 qr-status">Chưa quét/dán</span>
+            </div>
+            <div class="form-group">
+                <label>Nội dung thông tin CCCD:</label>
+                <textarea class="qr_display2 qr-content-textarea" placeholder="Dán văn bản CCCD..."></textarea>
+                <input type="hidden" name="qr_raw_2" class="qr_raw_2">
+                <button type="button" class="copyQrBtn2 btn-copy" style="display:none;">📋 Sao chép</button>
+            </div>
+            <div class="form-group">
+                <label>Số CCCD:</label>
+                <input type="text" name="cccd_number_2" class="cccd_number_2" placeholder="Số căn cước">
+            </div>
+            <div class="form-group">
+                <label>Họ tên:</label>
+                <input type="text" name="customer_name_2" class="customer_name_2" required>
+            </div>
+        </div>
+    </div>
 
-    function init() {
-        const container = document.getElementById('all-tables');
-        config.forEach(item => {
-            let headers = `<th class="stt-col">STT</th><th style="min-width:180px">Tên khách hàng</th><th style="min-width:120px">Địa chỉ</th>`;
-            
-            if (item.type === "tuvan") {
-                headers += `<th style="min-width:120px">Số tiền ĐK</th><th style="min-width:120px">Mục đích</th><th style="min-width:80px">Thời hạn</th><th style="min-width:130px">Ngày thẩm định KQ</th>`;
-            } else if (item.type === "thamdinh") {
-                headers += `<th style="min-width:120px">Số tiền ĐK</th><th style="min-width:120px">Mục đích</th><th style="min-width:80px">Thời hạn</th><th style="min-width:130px">Kết quả</th>`;
-            } else if (item.type === "disbursement") {
-                headers += `<th style="min-width:150px">${item.label}</th><th style="min-width:150px">Mục đích</th>`;
-            } else {
-                headers += `<th style="min-width:180px">${item.label}</th>`;
-            }
-            
-            headers += `<th style="min-width:180px">Ghi chú</th><th style="width:40px">Xóa</th>`;
+    <!-- Khối thông tin chung có tích hợp bản đồ + tìm kiếm rõ ràng -->
+    <div class="full-width-section">
+        <h3>🏠 THÔNG TIN NHÀ Ở & NHU CẦU VAY</h3>
+        <div class="form-group">
+            <label>📍 Vị trí nhà ở (Chấm trên bản đồ hoặc tìm kiếm):</label>
+            <div id="map_home" class="map-container"></div>
+            <div id="home_search_panel" class="map-search-box">
+                <input type="text" id="home_search_input" placeholder="Tìm địa chỉ, tọa độ... (VD: Hà Nội, 10.8231,106.6297)">
+                <button type="button" id="home_search_btn">🔍 Tìm & di chuyển</button>
+            </div>
+            <div id="home_coords_display" class="coords-display">📌 Vị trí hiện tại: Chưa chọn</div>
+            <input type="hidden" name="home_coords" id="home_coords">
+            <div id="home_coords_error" class="error"></div>
+        </div>
+        <div class="form-group">
+            <label>📸 Chụp ảnh nhà ở (Thêm/Xóa linh hoạt):</label>
+            <input type="file" accept="image/*" multiple id="home_photos_input">
+            <div id="preview_home_container" class="preview-img"></div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label>Tổng nhu cầu vốn (VNĐ):</label>
+            <input type="text" class="money-input" id="total_need" placeholder="VD: 500.000.000">
+        </div>
+        <div class="form-group">
+            <label>Vốn tự có (VNĐ):</label>
+            <input type="text" class="money-input" id="own_capital" placeholder="VD: 200.000.000">
+        </div>
+        <div class="form-group">
+            <label>Vốn vay đề nghị (VNĐ):</label>
+            <input type="text" id="loan_amount" style="background:#eee;" readonly class="money-input">
+        </div>
+        <div class="form-group">
+            <label>Mục đích vay:</label>
+            <textarea name="purpose" rows="2" placeholder="Ví dụ: Cải tạo nhà, mua máy móc..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>📍 Vị trí dự án (Chấm hoặc tìm kiếm):</label>
+            <div id="map_project" class="map-container"></div>
+            <div id="project_search_panel" class="map-search-box">
+                <input type="text" id="project_search_input" placeholder="Tìm địa điểm dự án...">
+                <button type="button" id="project_search_btn">🔍 Tìm & di chuyển</button>
+            </div>
+            <div id="project_coords_display" class="coords-display">📌 Vị trí hiện tại: Chưa chọn</div>
+            <input type="hidden" name="project_coords" id="project_coords">
+        </div>
+        <div class="form-group">
+            <label>📸 Ảnh nơi dự án:</label>
+            <input type="file" accept="image/*" multiple id="project_photos_input">
+            <div id="preview_project_container" class="preview-img"></div>
+        </div>
+        <div class="form-group">
+            <label>Thời hạn vay (tháng):</label>
+            <input type="number" name="duration" id="duration" placeholder="VD: 24">
+        </div>
+    </div>
 
-            const html = `
-                <div class="category-block">
-                    <div class="section-header">
-                        <h6 class="section-title small">${item.title}</h6>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-hover align-middle" data-category="${item.id}">
-                            <thead class="table-light small text-center align-middle">
-                                <tr>${headers}</tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="px-3 pb-3">
-                        <button class="btn btn-sm btn-link text-decoration-none" onclick="addRow('${item.id}')">
-                            <i class="fas fa-plus-circle me-1"></i>Thêm dòng mới
-                        </button>
-                    </div>
+    <div class="full-width-section">
+        <h3>🏦 THÔNG TIN TÀI SẢN ĐẢM BẢO</h3>
+        <div class="form-group">
+            <label>Loại tài sản:</label>
+            <select name="asset_type" id="asset_type">
+                <option value="Giấy chứng nhận QSD đất">Thế chấp QSD đất</option>
+                <option value="Không có tài sản">Không có tài sản</option>
+            </select>
+        </div>
+        <div id="asset_detail_section">
+            <div class="form-group">
+                <label>📍 Vị trí TSĐB (Chấm điểm / tìm kiếm):</label>
+                <div id="map_asset" class="map-container"></div>
+                <div id="asset_search_panel" class="map-search-box">
+                    <input type="text" id="asset_search_input" placeholder="Tìm kiếm địa chỉ tài sản...">
+                    <button type="button" id="asset_search_btn">🔍 Tìm & di chuyển</button>
                 </div>
-            `;
-            container.innerHTML += html;
-            addRow(item.id); // Mặc định mỗi bảng 1 dòng
+                <div id="asset_coords_display" class="coords-display">📌 Vị trí hiện tại: Chưa chọn</div>
+                <input type="hidden" name="asset_coords" id="asset_coords">
+            </div>
+            <div class="form-group">
+                <label>📸 Ảnh tài sản đảm bảo:</label>
+                <input type="file" accept="image/*" multiple id="asset_photos_input">
+                <div id="preview_asset_container" class="preview-img"></div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">💾 LƯU DỮ LIỆU THẨM ĐỊNH (KÈM ẢNH & TỌA ĐỘ)</button>
+    <div id="loadingMsg" class="loading" style="display:none;">⏳ Đang xử lý ảnh và mã hóa dữ liệu...</div>
+</form>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ================== 1. CẤU HÌNH CHUNG & QUẢN LÝ MẢNG ẢNH ĐỘNG ==================
+    let homeFilesArray = [];
+    let projectFilesArray = [];
+    let assetFilesArray = [];
+
+    function setupDynamicImages(inputEl, containerEl, storageArray) {
+        inputEl.addEventListener('change', function() {
+            Array.from(inputEl.files).forEach(file => {
+                if (file.type.startsWith('image/')) storageArray.push(file);
+            });
+            inputEl.value = '';
+            renderImages(containerEl, storageArray);
         });
     }
 
-    // --- Giữ nguyên các hàm bổ trợ ---
-    function addRow(catId) {
-        const conf = config.find(c => c.id === catId);
-        const tbody = document.querySelector(`table[data-category="${catId}"] tbody`);
-        const tr = document.createElement('tr');
-        
-        let inputs = `<td class="stt-col small align-middle"></td><td><input type="text" class="ten" placeholder="Họ tên..."></td><td><input type="text" class="dc" placeholder="Địa chỉ..."></td>`;
+    function renderImages(containerEl, storageArray) {
+        containerEl.innerHTML = '';
+        storageArray.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'image-wrapper';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn-delete-img';
+                deleteBtn.innerHTML = '✕';
+                deleteBtn.addEventListener('click', () => {
+                    storageArray.splice(index, 1);
+                    renderImages(containerEl, storageArray);
+                });
+                wrapper.appendChild(img);
+                wrapper.appendChild(deleteBtn);
+                containerEl.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
-        if (conf.type === "tuvan") {
-            inputs += `<td><input type="text" class="soTienDK" placeholder="VNĐ"></td><td><input type="text" class="mucDich"></td><td><input type="text" class="thoiHan" placeholder="Tháng"></td><td><input type="date" class="ngayThamDinh"></td>`;
-        } else if (conf.type === "thamdinh") {
-            inputs += `
-                <td><input type="text" class="soTienDK" placeholder="VNĐ"></td>
-                <td><input type="text" class="mucDich"></td>
-                <td><input type="text" class="thoiHan" placeholder="Tháng"></td>
-                <td>
-                    <select class="ketQua">
-                        <option value="Đồng ý">Đồng ý</option>
-                        <option value="Không đồng ý">Không đồng ý</option>
-                    </select>
-                </td>`;
-        } else if (conf.type === "disbursement") {
-            inputs += `<td><input type="text" class="val" placeholder="VNĐ"></td><td><input type="text" class="mucDich"></td>`;
-        } else {
-            inputs += `<td><input type="text" class="val"></td>`;
+    setupDynamicImages(document.getElementById('home_photos_input'), document.getElementById('preview_home_container'), homeFilesArray);
+    setupDynamicImages(document.getElementById('project_photos_input'), document.getElementById('preview_project_container'), projectFilesArray);
+    setupDynamicImages(document.getElementById('asset_photos_input'), document.getElementById('preview_asset_container'), assetFilesArray);
+
+    // Preview CCCD đơn
+    function previewSingleFile(inputElement, containerClassName) {
+        const container = document.querySelector('.' + containerClassName);
+        if (!inputElement || !container) return;
+        inputElement.addEventListener('change', () => {
+            container.innerHTML = '';
+            if (inputElement.files && inputElement.files[0]) {
+                const file = inputElement.files[0];
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    let img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = "70px";
+                    img.style.height = "70px";
+                    img.style.objectFit = "cover";
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    previewSingleFile(document.querySelector('.cccd_front_1'), 'preview_cccd_front_1');
+    previewSingleFile(document.querySelector('.cccd_back_1'), 'preview_cccd_back_1');
+    previewSingleFile(document.querySelector('.cccd_front_2'), 'preview_cccd_front_2');
+    previewSingleFile(document.querySelector('.cccd_back_2'), 'preview_cccd_back_2');
+
+    // Format tiền tệ
+    function formatMoneyVND(value) {
+        if (!value && value !== 0) return '';
+        let num = parseFloat(value.toString().replace(/\./g, ''));
+        if (isNaN(num)) return '';
+        return num.toLocaleString('vi-VN');
+    }
+    function parseMoneyValue(input) {
+        let raw = input.value.replace(/\./g, '');
+        let num = parseFloat(raw);
+        return isNaN(num) ? 0 : num;
+    }
+    document.querySelectorAll('.money-input').forEach(inp => {
+        inp.addEventListener('input', function(e) {
+            let cursorPos = this.selectionStart;
+            let origLen = this.value.length;
+            let raw = this.value.replace(/[^0-9]/g, '');
+            let num = parseFloat(raw);
+            if (this.readOnly) return;
+            this.value = isNaN(num) ? '' : num.toLocaleString('vi-VN');
+            let newLen = this.value.length;
+            this.setSelectionRange(cursorPos + (newLen - origLen), cursorPos + (newLen - origLen));
+            calculateLoan();
+        });
+    });
+    const totalNeed = document.getElementById('total_need');
+    const ownCapital = document.getElementById('own_capital');
+    const loanAmount = document.getElementById('loan_amount');
+    function calculateLoan() {
+        let total = parseMoneyValue(totalNeed);
+        let own = parseMoneyValue(ownCapital);
+        let loan = Math.max(0, total - own);
+        loanAmount.value = loan ? formatMoneyVND(loan) : '';
+    }
+
+    // ================== 2. XỬ LÝ CCCD QUÉT/DÁN ==================
+    function processCccdText(text) {
+        let cccdNum = '';
+        let fullName = '';
+        if (text.includes('Số CCCD:') || text.includes('Họ và tên:')) {
+            let cccdMatch = text.match(/Số\s+CCCD:\s*(\d+)/i);
+            let nameMatch = text.match(/Họ\s+và\s+tên:\s*([^\n\r]+)/i);
+            if (cccdMatch) cccdNum = cccdMatch[1].trim();
+            if (nameMatch) fullName = nameMatch[1].trim();
+            return { cccdNum, fullName, formattedText: text.trim() };
         }
-
-        inputs += `<td><input type="text" class="note" placeholder="..."></td><td class="text-center align-middle"><span class="btn-delete" onclick="removeRow(this, '${catId}')">×</span></td>`;
-        
-        tr.innerHTML = inputs;
-        tbody.appendChild(tr);
-        updateSTT(catId);
-    }
-
-    function removeRow(btn, catId) {
-        if(confirm("Xóa dòng này?")) {
-            btn.closest('tr').remove();
-            updateSTT(catId);
+        if (text.includes('|')) {
+            let parts = text.split('|');
+            if (parts.length >= 6) {
+                cccdNum = parts[0] ? parts[0].trim() : '';
+                fullName = parts[2] ? parts[2].trim() : '';
+                return { cccdNum, fullName, formattedText: text.replace(/\|/g, ' | ') };
+            }
         }
+        return null;
     }
 
-    function updateSTT(catId) {
-        const rows = document.querySelectorAll(`table[data-category="${catId}"] tbody tr`);
-        rows.forEach((row, index) => { row.querySelector('.stt-col').innerText = index + 1; });
-    }
-
-    async function saveAll() {
-        const btn = document.getElementById('btnSubmit');
-        let finalData = {};
-        let hasData = false;
-
-        config.forEach(item => {
-            const rows = document.querySelectorAll(`table[data-category="${item.id}"] tbody tr`);
-            let catData = [];
-            rows.forEach(row => {
-                const ten = row.querySelector('.ten').value.trim();
-                if (ten) {
-                    let rowData = {
-                        tenKhachHang: ten,
-                        diaChi: row.querySelector('.dc').value,
-                        ghiChu: row.querySelector('.note').value
-                    };
-                    if (item.type === "tuvan") {
-                        rowData.soTienDK = row.querySelector('.soTienDK').value;
-                        rowData.mucDich = row.querySelector('.mucDich').value;
-                        rowData.thoiHan = row.querySelector('.thoiHan').value;
-                        rowData.ngayThamDinh = row.querySelector('.ngayThamDinh').value;
-                    } else if (item.type === "thamdinh") {
-                        rowData.soTienDK = row.querySelector('.soTienDK').value;
-                        rowData.mucDich = row.querySelector('.mucDich').value;
-                        rowData.thoiHan = row.querySelector('.thoiHan').value;
-                        rowData.ketQua = row.querySelector('.ketQua').value;
-                    } else if (item.type === "disbursement") {
-                        rowData.giaTri = row.querySelector('.val').value;
-                        rowData.mucDich = row.querySelector('.mucDich').value;
-                    } else {
-                        rowData.giaTri = row.querySelector('.val').value;
+    function initQr(scanBtn, stopBtn, readerDiv, statusSpan, displayTextArea, hiddenInput, copyBtn) {
+        let scanner = null;
+        displayTextArea.addEventListener('paste', () => {
+            setTimeout(() => {
+                let val = displayTextArea.value;
+                let parsed = processCccdText(val);
+                if (parsed) {
+                    displayTextArea.value = parsed.formattedText;
+                    hiddenInput.value = parsed.formattedText;
+                    let parentCol = scanBtn.closest('.col');
+                    if (parentCol) {
+                        let cccdInp = parentCol.querySelector('input[name^="cccd_number_"]');
+                        let nameInp = parentCol.querySelector('input[name^="customer_name_"]');
+                        if (cccdInp) cccdInp.value = parsed.cccdNum;
+                        if (nameInp) nameInp.value = parsed.fullName;
                     }
-                    catData.push(rowData);
+                    statusSpan.innerText = "✅ Đã phân tích từ dán!";
+                    copyBtn.style.display = "inline-block";
+                }
+            }, 100);
+        });
+        async function start() {
+            if (scanner && scanner.isScanning) await scanner.stop();
+            readerDiv.style.display = 'block';
+            statusSpan.innerText = "📷 Khởi động camera...";
+            try {
+                scanner = new Html5Qrcode(readerDiv.id);
+                await scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 250, height: 250 } }, (text) => {
+                    let parsed = processCccdText(text);
+                    if (parsed) {
+                        displayTextArea.value = parsed.formattedText;
+                        hiddenInput.value = parsed.formattedText;
+                        let parentCol = scanBtn.closest('.col');
+                        if (parentCol) {
+                            let cccdInp = parentCol.querySelector('input[name^="cccd_number_"]');
+                            let nameInp = parentCol.querySelector('input[name^="customer_name_"]');
+                            if (cccdInp) cccdInp.value = parsed.cccdNum;
+                            if (nameInp) nameInp.value = parsed.fullName;
+                        }
+                    } else {
+                        displayTextArea.value = text;
+                        hiddenInput.value = text;
+                    }
+                    statusSpan.innerText = "✅ Quét thành công!";
+                    copyBtn.style.display = "inline-block";
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    stop();
+                });
+                scanBtn.disabled = true;
+            } catch (err) {
+                statusSpan.innerText = "❌ Lỗi camera";
+                readerDiv.style.display = 'none';
+                scanBtn.disabled = false;
+            }
+        }
+        async function stop() {
+            if (scanner && scanner.isScanning) await scanner.stop();
+            readerDiv.style.display = 'none';
+            scanBtn.disabled = false;
+        }
+        scanBtn.addEventListener('click', start);
+        stopBtn.addEventListener('click', stop);
+        copyBtn.addEventListener('click', () => { if (hiddenInput.value) { navigator.clipboard.writeText(hiddenInput.value); alert("Đã sao chép"); } });
+    }
+    const reader1 = document.querySelector('.reader1'); reader1.id = 'r1_' + Math.random();
+    initQr(document.querySelector('.scanQRBtn1'), document.querySelector('.stopScanBtn1'), reader1, document.querySelector('.qr-status1'), document.querySelector('.qr_display1'), document.querySelector('.qr_raw_1'), document.querySelector('.copyQrBtn1'));
+    const reader2 = document.querySelector('.reader2'); reader2.id = 'r2_' + Math.random();
+    initQr(document.querySelector('.scanQRBtn2'), document.querySelector('.stopScanBtn2'), reader2, document.querySelector('.qr-status2'), document.querySelector('.qr_display2'), document.querySelector('.qr_raw_2'), document.querySelector('.copyQrBtn2'));
+
+    // ================== 3. BẢN ĐỒ NÂNG CAO: CHẤM ĐIỂM + TÌM KIẾM ==================
+    const mapObjects = {};
+    const markers = {}; // lưu marker hiện tại
+
+    function initMapWithSearch(mapId, coordInputId, displayCoordId, searchInputId, searchBtnId, defaultView = [14.0583, 108.2772], zoom = 6) {
+        const map = L.map(mapId).setView(defaultView, zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        let currentMarker = null;
+        markers[mapId] = null;
+
+        // Hàm cập nhật marker và hiển thị tọa độ
+        function setMarkerAndCoords(lat, lng, updateInput = true) {
+            if (currentMarker) map.removeLayer(currentMarker);
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            markers[mapId] = currentMarker;
+            const coordStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            document.getElementById(displayCoordId).innerHTML = `📍 Tọa độ: ${coordStr}`;
+            if (updateInput) document.getElementById(coordInputId).value = `${lat},${lng}`;
+            map.setView([lat, lng], 15);
+        }
+
+        // Click trên bản đồ để chọn điểm
+        map.on('click', e => {
+            setMarkerAndCoords(e.latlng.lat, e.latlng.lng, true);
+        });
+
+        // Tìm kiếm địa danh
+        const searchInput = document.getElementById(searchInputId);
+        const searchBtn = document.getElementById(searchBtnId);
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', async () => {
+                let query = searchInput.value.trim();
+                if (!query) {
+                    alert("Vui lòng nhập địa chỉ hoặc tọa độ (vd: 10.8231,106.6297)");
+                    return;
+                }
+                // Xử lý nếu nhập tọa độ thô "lat,lng"
+                let latLngMatch = query.match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
+                if (latLngMatch) {
+                    let lat = parseFloat(latLngMatch[1]);
+                    let lng = parseFloat(latLngMatch[3]);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        setMarkerAndCoords(lat, lng, true);
+                        return;
+                    }
+                }
+                // Gọi Nominatim
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=0&accept-language=vi`);
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        setMarkerAndCoords(lat, lon, true);
+                    } else {
+                        alert("Không tìm thấy địa điểm. Hãy thử tìm kiếm khác.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi kết nối tìm kiếm. Vui lòng thử lại.");
                 }
             });
-            if (catData.length > 0) { finalData[item.id] = catData; hasData = true; }
-        });
-
-        if (!hasData) return alert("Vui lòng nhập tên khách hàng!");
-        
-        if(!confirm("Lưu báo cáo lên Google Sheet?")) return;
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang gửi...';
-
-        try {
-            await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(finalData) });
-            alert("Lưu báo cáo thành công!");
-            location.reload();
-        } catch (e) {
-            alert("Lỗi: " + e);
-            btn.disabled = false;
-            btn.innerText = "LƯU TOÀN BỘ BÁO CÁO";
         }
+
+        // Nếu có geolocation ban đầu, định vị lần đầu (tự động lấy vị trí hiện tại)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+                setMarkerAndCoords(pos.coords.latitude, pos.coords.longitude, true);
+            }, () => {
+                // fallback: không cần xử lý, người dùng tự chấm tay
+            });
+        }
+
+        mapObjects[mapId] = map;
+        // Hàm để bên ngoài có thể set marker (gắn lại nếu cần)
+        return { map, setMarkerAndCoords };
     }
 
-    // Khởi tạo bảng khi load trang
-    window.onload = init;
+    // Khởi tạo 3 bản đồ kèm tìm kiếm hiển thị tọa độ rõ ràng
+    const homeMap = initMapWithSearch('map_home', 'home_coords', 'home_coords_display', 'home_search_input', 'home_search_btn', [14.0583, 108.2772], 6);
+    const projectMap = initMapWithSearch('map_project', 'project_coords', 'project_coords_display', 'project_search_input', 'project_search_btn', [14.0583, 108.2772], 6);
+    const assetMap = initMapWithSearch('map_asset', 'asset_coords', 'asset_coords_display', 'asset_search_input', 'asset_search_btn', [14.0583, 108.2772], 6);
+
+    // Lưu trữ để dùng sau (nếu cần invalidate)
+    window.allMaps = [homeMap.map, projectMap.map, assetMap.map];
+    window.addEventListener('resize', () => {
+        if (homeMap.map) homeMap.map.invalidateSize();
+        if (projectMap.map) projectMap.map.invalidateSize();
+        if (assetMap.map) assetMap.map.invalidateSize();
+    });
+
+    // Xử lý ẩn hiện phần TSĐB
+    const assetSec = document.getElementById('asset_detail_section');
+    document.getElementById('asset_type').addEventListener('change', function() {
+        if (this.value === 'Không có tài sản') {
+            assetSec.style.display = 'none';
+        } else {
+            assetSec.style.display = 'block';
+            setTimeout(() => { if (assetMap.map) assetMap.map.invalidateSize(); }, 100);
+        }
+    });
+    document.getElementById('asset_type').dispatchEvent(new Event('change'));
+
+    // ================== 4. GỬI DỮ LIỆU API ==================
+    async function arrayToBase64(fileArray) {
+        if (!fileArray || fileArray.length === 0) return [];
+        const promises = fileArray.map(f => new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(f);
+        }));
+        const results = await Promise.all(promises);
+        return results.filter(x => x !== null);
+    }
+
+    async function fileInputToBase64(inputElement) {
+        if (!inputElement || !inputElement.files || inputElement.files.length === 0) return '';
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(inputElement.files[0]);
+        });
+    }
+
+    const form = document.getElementById('appraisalForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingDiv = document.getElementById('loadingMsg');
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOTYynHO0K0CAW_v0dQ0KX7URWIVbGya3imjYIBhGCp3r2NT3BPxidThlD8QMcy-w6/exec'; 
+
+    function validateCoords() {
+        if (!document.getElementById('home_coords').value) {
+            document.getElementById('home_coords_error').innerText = '❌ Bạn phải chấm hoặc tìm kiếm vị trí nhà ở trên bản đồ!';
+            return false;
+        } else document.getElementById('home_coords_error').innerText = '';
+        if (homeFilesArray.length === 0) { alert('Cần thêm ít nhất 1 ảnh nhà ở.'); return false; }
+        if (projectFilesArray.length === 0) { alert('Cần thêm ít nhất 1 ảnh nơi dự án.'); return false; }
+        if (document.getElementById('asset_type').value !== 'Không có tài sản' && assetFilesArray.length === 0) {
+            if (!confirm('⚠️ Chưa có ảnh tài sản đảm bảo. Bạn có muốn tiếp tục không?')) return false;
+        }
+        if (!document.querySelector('.customer_name_1').value.trim()) { alert('Họ tên người vay 1 không được để trống'); return false; }
+        if (!document.querySelector('.customer_name_2').value.trim()) { alert('Họ tên người vay 2 không được để trống'); return false; }
+        return true;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validateCoords()) return;
+        submitBtn.disabled = true;
+        loadingDiv.style.display = 'block';
+        try {
+            const payload = {
+                customer_name_1: document.querySelector('.customer_name_1').value,
+                cccd_number_1: document.querySelector('.cccd_number_1').value,
+                qr_raw_1: document.querySelector('.qr_raw_1').value,
+                customer_name_2: document.querySelector('.customer_name_2').value,
+                cccd_number_2: document.querySelector('.cccd_number_2').value,
+                qr_raw_2: document.querySelector('.qr_raw_2').value,
+                home_coords: document.getElementById('home_coords').value,
+                total_need: parseMoneyValue(totalNeed),
+                own_capital: parseMoneyValue(ownCapital),
+                loan_amount: parseMoneyValue(loanAmount),
+                purpose: form.purpose.value,
+                project_coords: document.getElementById('project_coords').value,
+                duration: document.getElementById('duration').value,
+                asset_type: document.getElementById('asset_type').value,
+                asset_coords: document.getElementById('asset_coords').value,
+                timestamp: new Date().toISOString(),
+                cccd_front_1: await fileInputToBase64(document.querySelector('.cccd_front_1')),
+                cccd_back_1: await fileInputToBase64(document.querySelector('.cccd_back_1')),
+                cccd_front_2: await fileInputToBase64(document.querySelector('.cccd_front_2')),
+                cccd_back_2: await fileInputToBase64(document.querySelector('.cccd_back_2')),
+                home_photos: await arrayToBase64(homeFilesArray),
+                project_photos: await arrayToBase64(projectFilesArray),
+                asset_photos: await arrayToBase64(assetFilesArray)
+            };
+            if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyOTYynHO0K0CAW_v0dQ0KX7URWIVbGya3imjYIBhGCp3r2NT3BPxidThlD8QMcy-w6/exec') {
+                console.log('✅ DỮ LIỆU MẪU (thử nghiệm):', payload);
+                alert('[DEMO] Dữ liệu đã sẵn sàng (bao gồm ảnh động + tọa độ tìm kiếm). Hãy thay SCRIPT_URL để kết nối Google Sheets.');
+            } else {
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+				alert('✅ Lưu thành công toàn bộ dữ liệu thẩm định!');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Lỗi: ' + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            loadingDiv.style.display = 'none';
+        }
+    });
 </script>
 </body>
 </html>
