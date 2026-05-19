@@ -761,7 +761,7 @@
     const form = document.getElementById('appraisalForm');
     const submitBtn = document.getElementById('submitBtn');
     const loadingDiv = document.getElementById('loadingMsg');
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOTYynHO0K0CAW_v0dQ0KX7URWIVbGya3imjYIBhGCp3r2NT3BPxidThlD8QMcy-w6/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypsUyoCwXhMQSbWcKwSNHa5SuZYjI6ngFNbR1et2N0aoms84DZCWDgC7GaY0ernu-m/exec'; 
 
     function validateCoords() {
         if (!document.getElementById('home_coords').value) {
@@ -809,8 +809,22 @@
                 project_photos: await arrayToBase64(projectFilesArray),
                 asset_photos: await arrayToBase64(assetFilesArray)
             };
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
-			alert('✅ Lưu thành công toàn bộ dữ liệu thẩm định!');
+            const response = await fetch(SCRIPT_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload)
+});
+
+if (response.ok) {
+  const result = await response.json();
+  if (result.status === 'success') {
+    alert('✅ Lưu thành công! Mã hồ sơ: ' + result.data.stt);
+  } else {
+    alert('❌ Lỗi từ server: ' + result.message);
+  }
+} else {
+  alert('❌ Không thể kết nối server. Status: ' + response.status);
+}
         } catch (err) {
             console.error(err);
             alert('Lỗi: ' + err.message);
