@@ -809,13 +809,8 @@
                 project_photos: await arrayToBase64(projectFilesArray),
                 asset_photos: await arrayToBase64(assetFilesArray)
             };
-            if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyOTYynHO0K0CAW_v0dQ0KX7URWIVbGya3imjYIBhGCp3r2NT3BPxidThlD8QMcy-w6/exec') {
-                console.log('✅ DỮ LIỆU MẪU (thử nghiệm):', payload);
-                alert('[DEMO] Dữ liệu đã sẵn sàng (bao gồm ảnh động + tọa độ tìm kiếm). Hãy thay SCRIPT_URL để kết nối Google Sheets.');
-            } else {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
-				alert('✅ Lưu thành công toàn bộ dữ liệu thẩm định!');
-            }
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+			alert('✅ Lưu thành công toàn bộ dữ liệu thẩm định!');
         } catch (err) {
             console.error(err);
             alert('Lỗi: ' + err.message);
