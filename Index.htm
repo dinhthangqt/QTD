@@ -343,7 +343,7 @@
         </div>
     </div>
 
-    <!-- Khối thông tin chung có tích hợp bản đồ + tìm kiếm rõ ràng -->
+    <!-- Khối thông tin chung có tích hợp bản đồ + tìm kiếm -->
     <div class="full-width-section">
         <h3>🏠 THÔNG TIN NHÀ Ở & NHU CẦU VAY</h3>
         <div class="form-group">
@@ -400,6 +400,7 @@
         </div>
     </div>
 
+    <!-- Khối tài sản đảm bảo -->
     <div class="full-width-section">
         <h3>🏦 THÔNG TIN TÀI SẢN ĐẢM BẢO</h3>
         <div class="form-group">
@@ -424,6 +425,32 @@
                 <label>📸 Ảnh tài sản đảm bảo:</label>
                 <input type="file" accept="image/*" multiple id="asset_photos_input">
                 <div id="preview_asset_container" class="preview-img"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khối Đề xuất của Cán bộ thẩm định (MỚI BỔ SUNG) -->
+    <div class="full-width-section" style="background: #fff3e0; border: 1px solid #ffe0b2;">
+        <h3 style="color: #e65100; border-left: 4px solid #e65100; padding-left: 10px; margin-top: 0; margin-bottom: 15px;">📝 ĐỀ XUẤT CỦA CÁN BỘ THẨM ĐỊNH</h3>
+        <div class="form-group">
+            <label>Phương án đề xuất:</label>
+            <select name="officer_proposal" id="officer_proposal" style="border-color: #ffb74d; font-weight: bold;">
+                <option value="Đồng ý cho vay">✅ Đồng ý cho vay</option>
+                <option value="Không đồng ý cho vay">❌ Không đồng ý cho vay</option>
+            </select>
+        </div>
+        <div id="proposal_details_group">
+            <div class="form-group">
+                <label>Mức cho vay đề xuất (VNĐ):</label>
+                <input type="text" class="money-input" id="proposed_loan_amount" placeholder="VD: 300.000.000" style="border-color: #ffb74d;">
+            </div>
+            <div class="form-group">
+                <label>Thời hạn cho vay đề xuất (tháng):</label>
+                <input type="number" id="proposed_duration" placeholder="VD: 24" style="border-color: #ffb74d;">
+            </div>
+            <div class="form-group">
+                <label>Lãi suất cho vay đề xuất (%/năm):</label>
+                <input type="number" step="0.01" id="proposed_interest_rate" placeholder="VD: 8.5" style="border-color: #ffb74d;">
             </div>
         </div>
     </div>
@@ -633,7 +660,7 @@
 
     // ================== 3. BẢN ĐỒ NÂNG CAO: CHẤM ĐIỂM + TÌM KIẾM ==================
     const mapObjects = {};
-    const markers = {}; // lưu marker hiện tại
+    const markers = {};
 
     function initMapWithSearch(mapId, coordInputId, displayCoordId, searchInputId, searchBtnId, defaultView = [14.0583, 108.2772], zoom = 6) {
         const map = L.map(mapId).setView(defaultView, zoom);
@@ -641,7 +668,6 @@
         let currentMarker = null;
         markers[mapId] = null;
 
-        // Hàm cập nhật marker và hiển thị tọa độ
         function setMarkerAndCoords(lat, lng, updateInput = true) {
             if (currentMarker) map.removeLayer(currentMarker);
             currentMarker = L.marker([lat, lng]).addTo(map);
@@ -652,12 +678,10 @@
             map.setView([lat, lng], 15);
         }
 
-        // Click trên bản đồ để chọn điểm
         map.on('click', e => {
             setMarkerAndCoords(e.latlng.lat, e.latlng.lng, true);
         });
 
-        // Tìm kiếm địa danh
         const searchInput = document.getElementById(searchInputId);
         const searchBtn = document.getElementById(searchBtnId);
         if (searchBtn && searchInput) {
@@ -667,7 +691,6 @@
                     alert("Vui lòng nhập địa chỉ hoặc tọa độ (vd: 10.8231,106.6297)");
                     return;
                 }
-                // Xử lý nếu nhập tọa độ thô "lat,lng"
                 let latLngMatch = query.match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
                 if (latLngMatch) {
                     let lat = parseFloat(latLngMatch[1]);
@@ -677,7 +700,6 @@
                         return;
                     }
                 }
-                // Gọi Nominatim
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=0&accept-language=vi`);
                     const data = await response.json();
@@ -695,27 +717,21 @@
             });
         }
 
-        // Nếu có geolocation ban đầu, định vị lần đầu (tự động lấy vị trí hiện tại)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 map.setView([pos.coords.latitude, pos.coords.longitude], 15);
                 setMarkerAndCoords(pos.coords.latitude, pos.coords.longitude, true);
-            }, () => {
-                // fallback: không cần xử lý, người dùng tự chấm tay
-            });
+            }, () => {});
         }
 
         mapObjects[mapId] = map;
-        // Hàm để bên ngoài có thể set marker (gắn lại nếu cần)
         return { map, setMarkerAndCoords };
     }
 
-    // Khởi tạo 3 bản đồ kèm tìm kiếm hiển thị tọa độ rõ ràng
     const homeMap = initMapWithSearch('map_home', 'home_coords', 'home_coords_display', 'home_search_input', 'home_search_btn', [14.0583, 108.2772], 6);
     const projectMap = initMapWithSearch('map_project', 'project_coords', 'project_coords_display', 'project_search_input', 'project_search_btn', [14.0583, 108.2772], 6);
     const assetMap = initMapWithSearch('map_asset', 'asset_coords', 'asset_coords_display', 'asset_search_input', 'asset_search_btn', [14.0583, 108.2772], 6);
 
-    // Lưu trữ để dùng sau (nếu cần invalidate)
     window.allMaps = [homeMap.map, projectMap.map, assetMap.map];
     window.addEventListener('resize', () => {
         if (homeMap.map) homeMap.map.invalidateSize();
@@ -734,6 +750,19 @@
         }
     });
     document.getElementById('asset_type').dispatchEvent(new Event('change'));
+
+    // Xử lý ẩn hiện chi tiết đề xuất cho vay (MỚI BỔ SUNG)
+    const proposalDetailsGroup = document.getElementById('proposal_details_group');
+    document.getElementById('officer_proposal').addEventListener('change', function() {
+        if (this.value === 'Không đồng ý cho vay') {
+            proposalDetailsGroup.style.display = 'none';
+            document.getElementById('proposed_loan_amount').value = '';
+            document.getElementById('proposed_duration').value = '';
+            document.getElementById('proposed_interest_rate').value = '';
+        } else {
+            proposalDetailsGroup.style.display = 'block';
+        }
+    });
 
     // ================== 4. GỬI DỮ LIỆU API ==================
     async function arrayToBase64(fileArray) {
@@ -761,7 +790,9 @@
     const form = document.getElementById('appraisalForm');
     const submitBtn = document.getElementById('submitBtn');
     const loadingDiv = document.getElementById('loadingMsg');
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwi1exfGrziBYWnK_nyTr0Ahk6WsXNBSKL_V8ec7Wg_gnJwRNLRU81E73AXi0thyilL/exec'; 
+    
+    // ĐƯỜNG LINK WEB API GOOGLE SCRIPT CỦA ANH THẮNG
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7Ralf4Lxc7JQE6cdq2UMzBKk2vH-6D7dP2AGZ3BThl31K-BLsqjHD8WZat8r4bju1-g/exec'; 
 
     function validateCoords() {
         if (!document.getElementById('home_coords').value) {
@@ -775,15 +806,25 @@
         }
         if (!document.querySelector('.customer_name_1').value.trim()) { alert('Họ tên người vay 1 không được để trống'); return false; }
         if (!document.querySelector('.customer_name_2').value.trim()) { alert('Họ tên người vay 2 không được để trống'); return false; }
+        
+        // Kiểm tra logic đề xuất
+        if (document.getElementById('officer_proposal').value === 'Đồng ý cho vay') {
+            if (!document.getElementById('proposed_loan_amount').value.trim()) { alert('Vui lòng nhập mức cho vay đề xuất.'); return false; }
+            if (!document.getElementById('proposed_duration').value.trim()) { alert('Vui lòng nhập thời hạn cho vay đề xuất.'); return false; }
+            if (!document.getElementById('proposed_interest_rate').value.trim()) { alert('Vui lòng nhập lãi suất đề xuất.'); return false; }
+        }
         return true;
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!validateCoords()) return;
+        
         submitBtn.disabled = true;
         loadingDiv.style.display = 'block';
+        
         try {
+            // Chuẩn bị dữ liệu đóng gói gửi lên Server
             const payload = {
                 customer_name_1: document.querySelector('.customer_name_1').value,
                 cccd_number_1: document.querySelector('.cccd_number_1').value,
@@ -807,27 +848,43 @@
                 cccd_back_2: await fileInputToBase64(document.querySelector('.cccd_back_2')),
                 home_photos: await arrayToBase64(homeFilesArray),
                 project_photos: await arrayToBase64(projectFilesArray),
-                asset_photos: await arrayToBase64(assetFilesArray)
+                asset_photos: await arrayToBase64(assetFilesArray),
+                
+                // Gói dữ liệu Đề xuất Thẩm định gửi lên Server (Đồng bộ mảng cột mới)
+                officer_proposal: document.getElementById('officer_proposal').value,
+                proposed_loan_amount: parseMoneyValue(document.getElementById('proposed_loan_amount')),
+                proposed_duration: document.getElementById('proposed_duration').value,
+                proposed_interest_rate: document.getElementById('proposed_interest_rate').value
             };
-            const response = await fetch(SCRIPT_URL, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload)
-});
 
-if (response.ok) {
-  const result = await response.json();
-  if (result.status === 'success') {
-    alert('✅ Lưu thành công! Mã hồ sơ: ' + result.data.stt);
-  } else {
-    alert('❌ Lỗi từ server: ' + result.message);
-  }
-} else {
-  alert('❌ Không thể kết nối server. Status: ' + response.status);
-}
+            // GỬI DATA: Không dùng mode 'no-cors' để lấy trực tiếp kết quả JSON từ Web App trả về
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('✅ LƯU HỒ SƠ THÀNH CÔNG!\n- Số thứ tự (STT): ' + result.data.stt + '\n- Thư mục hồ sơ gốc Drive đã được khởi tạo.');
+                    
+                    // Reset sạch form để chuẩn bị thẩm định ca tiếp theo
+                    form.reset();
+                    document.getElementById('preview_home_container').innerHTML = '';
+                    document.getElementById('preview_project_container').innerHTML = '';
+                    document.getElementById('preview_asset_container').innerHTML = '';
+                    homeFilesArray = []; projectFilesArray = []; assetFilesArray = [];
+                    document.getElementById('asset_type').dispatchEvent(new Event('change'));
+                    document.getElementById('officer_proposal').dispatchEvent(new Event('change'));
+                } else {
+                    alert('❌ Hệ thống Google Apps Script báo lỗi: ' + result.message);
+                }
+            } else {
+                alert('❌ Lỗi kết nối máy chủ Google. Mã trạng thái (Status): ' + response.status);
+            }
         } catch (err) {
             console.error(err);
-            alert('Lỗi: ' + err.message);
+            alert('❌ Đã xảy ra sự cố đường truyền: ' + err.message);
         } finally {
             submitBtn.disabled = false;
             loadingDiv.style.display = 'none';
